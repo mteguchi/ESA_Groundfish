@@ -59,7 +59,7 @@ internet <- T
 
 E.end <- -112
 W.end <- -128
-N.end <- 61
+N.end <- 51
 S.end <- 30
 
 # center.latlon = data.frame(lat = approx.center$Y, 
@@ -114,6 +114,16 @@ US_Canada_border <- sp::spTransform(rgdal::readOGR(dsn = paste0(dirSelector()$Rd
 US_Canada_border <- raster::crop(US_Canada_border, raster::extent(c(W.end, E.end, 47, 51)))
 US_Canada_border.df <- broom::tidy(US_Canada_border) 
 
+# state borders from here: https://www.census.gov/geo/maps-data/data/cbf/cbf_state.html
+state_border <- sp::spTransform(rgdal::readOGR(dsn = paste0(dirSelector()$Rdir,
+                                                                "Oceans and Maps/cb_2017_us_state_500k"),
+                                                   layer = "cb_2017_us_state_500k",
+                                                   verbose = FALSE),
+                                    sp::CRS("+proj=longlat +datum=WGS84"))
+
+state_border <- raster::crop(state_border, raster::extent(c(W.end, E.end, 32, 50)))
+state_border.df <- broom::tidy(state_border)
+
 # critical habitat polygons can be found here:
 # http://www.nmfs.noaa.gov/pr/species/criticalhabitat.htm
 Dc_CH <- spTransform(readOGR(dsn = "data",
@@ -122,40 +132,51 @@ Dc_CH <- spTransform(readOGR(dsn = "data",
                      CRS("+proj=longlat +datum=WGS84"))
 
 Dc_CH.df <- tidy(Dc_CH)
-
+border.color <- "gray20"
 p1 <- ggplot() + 
+  geom_polygon(data = data.frame(y = c(N.end, S.end, S.end, N.end, N.end),
+                                 x = c(W.end, W.end, E.end, E.end, W.end)),
+               aes(x = x, y = y),
+               fill = water.color,
+               alpha = 0.8) + 
   geom_polygon(fill = land.color,
                data = W.coast.df,
                aes(x=long, y=lat, group = id),
-               alpha = 0.7) +  
+               alpha = 0.9) +  
   geom_path(data = US_MX_border.df,
             aes(x = long, y = lat, group = group),
-            color = "gray20",
+            color = border.color,
             size = 0.5) + 
   geom_path(data = US_Canada_border.df,
             aes(x = long, y = lat, group = group),
-            color = "gray20",
+            color = border.color,
             size = 0.5) + #coord_map()
+  geom_path(data = state_border.df,
+            aes(x = long, y = lat, group = group),
+            color = border.color,
+            size = 0.5) + #coord_map()
+  geom_path(data = data.frame(x = c(E.end, E.end), 
+                              y = c(S.end, N.end)),
+            aes(x = x, y = y),
+            color = land.color,
+            size = 1.2) + 
   geom_polygon(data = Dc_CH.df,
                aes(x = long, y = lat, group = group),
-               fill = 'darkseagreen1', colour = 'gray26',
+               fill = 'darkgreen', colour = 'gray26',
                alpha = 0.4) +
   coord_map() +
   xlim(c(-128, E.end))+
   ylab(expression(paste("Latitude (", degree, "N)"))) +
   xlab(expression(paste("Longitude (", degree, "W)", sep=""))) 
     
-#  theme(panel.background = element_rect(fill = water.color)) 
-  
 p1
-
-
 
 # read the stranding data:
 infile <- 'data/WC_DC_Strandings_Mar2019.csv'
 
 dat1 <- read.table(infile, sep = ",", header = TRUE)
-dat1 %>% mutate(yr.f = factor(Year_Initially_Observed)) -> dat1
+dat1 %>% filter(Latitude < 50) %>%
+  mutate(Year = factor(Year_Initially_Observed)) -> dat1
 # dat1$yr.fac <- as.factor(dat1$Year_Initially_Observed)
 # 
 # dat1.dead <- dat1[-grep("TRUE", dat1$Alive_Released),]
@@ -167,18 +188,18 @@ dat1 %>% mutate(yr.f = factor(Year_Initially_Observed)) -> dat1
 
 p1a <- p1 + 
   geom_point(data = dat1,
-             aes(x = Longitude, y = Latitude,
-                 color = yr.f)) 
-  # xlab("Longitude") + 
-  # ylab("Latitude")
-
+             aes(x = Longitude, 
+                 y = Latitude,
+                 color = Year)) 
+  
 p1a
 if (save.fig){
   ggsave(filename = paste0('figures/Dc_strandings_map_', 
                            Sys.Date(), '.png'),
+         device = "png",
          width = 8,
          height = 7,
-         plot = p1,
+         plot = p1a,
          dpi = 600)
   
 }

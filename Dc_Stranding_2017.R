@@ -45,11 +45,14 @@ p2 <- ggplot(data = dat1.dead) +
   scale_y_continuous(breaks = seq(0, 17, 1)) +
   ylab('Counts') + xlab('Year') + 
   ggtitle('Stranded leatherback turtles') +
-  theme(axis.text.x = element_text(angle = 90, size = 15, vjust = 0.5))
+  theme(axis.text.x = element_text(angle = 90, size = 15, vjust = 0.5),
+        legend.position = c(0.8,0.8))
 
+p2
 if (save.fig){
   ggsave(filename = paste0('figures/Dc_strandings_', 
                            runDate, '.png'),
+         device = "png",
          plot = p2,
          width = 8,
          height = 7,
