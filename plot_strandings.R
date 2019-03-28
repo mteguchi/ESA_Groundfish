@@ -21,17 +21,18 @@ library(sp)            # classes and methods for spatial data
 library(rgdal)         # bindings for the geospatial data abstraction library
 # library(scales)        # making transparency
 # 
-library(ggmap)
+#library(ggmap)
 # library(ggplot2)
 # library(ggsn)         # for adding scale bars
 # library(directlabels) # for adding contour line labels
 library(broom)        # instead of fortify in ggplot2 (recommended)
+library(tidyverse)
 
 save.fig <- FALSE
 # if there is no internet, use the stored file - this may not work
 # as Google apparently allow the use of downloaded images for only
 # 30 days. 
-internet <- T
+#internet <- T
 
 # # create the base map - Google stopped sharing these maps...
 # if (internet){
@@ -56,6 +57,9 @@ internet <- T
 # sp::proj4string(approx.center) <- sp::CRS("+proj=longlat +datum=WGS84")
 # center.UTM <- sp::spTransform(approx.center,
 #                               sp::CRS("+proj=utm +zone=10 ellps=WGS84"))
+
+# file for the stranding data:
+infile <- 'data/Dermochelys_Strandings_2019-03-28.csv'
 
 E.end <- -112
 W.end <- -128
@@ -162,7 +166,7 @@ p1 <- ggplot() +
             size = 1.2) + 
   geom_polygon(data = Dc_CH.df,
                aes(x = long, y = lat, group = group),
-               fill = 'darkgreen', colour = 'gray26',
+               fill = 'azure', colour = 'firebrick1',
                alpha = 0.4) +
   coord_map() +
   xlim(c(-128, E.end))+
@@ -171,11 +175,10 @@ p1 <- ggplot() +
     
 p1
 
-# read the stranding data:
-infile <- 'data/WC_DC_Strandings_Mar2019.csv'
 
 dat1 <- read.table(infile, sep = ",", header = TRUE)
-dat1 %>% filter(Latitude < 50) %>%
+dat.north <- filter(dat1, Latitude > 50)
+dat1 %>% filter(Latitude <= 50) %>%
   mutate(Year = factor(Year_Initially_Observed)) -> dat1
 # dat1$yr.fac <- as.factor(dat1$Year_Initially_Observed)
 # 

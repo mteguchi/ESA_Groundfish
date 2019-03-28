@@ -1,10 +1,12 @@
 
 rm(list=ls())
 library(RODBC)
-library(dplyr)
+library(tidyverse)
 library(readr)
 
-SWFSC <- T
+save.file <- T
+
+SWFSC <- F
 # load a couple databases through ODBC
 # this works only at SWFSC - or VPN also?
 
@@ -15,6 +17,7 @@ if (SWFSC){
   #Turtle.tbls <- sqlTables(Turtle)
   Turtle.Stranding <- sqlQuery(Turtle,
                                'select * from tbl_Stranding')
+  
   Turtle.Stranding.Details <- sqlQuery(Turtle,
                                        'select * from tbl_Stranding_Detail')
   Sp.table <- sqlQuery(Turtle,
@@ -30,7 +33,39 @@ if (SWFSC){
                           'select * from tblCity')
   odbcClose(SWFSCCommon)
 
-
+  # remove some fields. ts is a checkbox results
+  Turtle.Stranding %>% select(-c(ts, starts_with("Observed_By"),
+                                 starts_with("Edit_"),
+                                 Field_ID,
+                                 Other_ID)) -> Turtle.Stranding
+  
+  # need to remove some fields - they are paragraphs and not useful
+  Turtle.Stranding.Details %>% select(-c(contains("_By"),
+                                         ends_with("Description"),
+                                         starts_with("Edit_"),
+                                         contains("Necrops"),
+                                         ts,
+                                         Location,
+                                         Locality_Details,
+                                         Other_Finding,
+                                         Other_Finding_Description,
+                                         Necropsy_Remarks,
+                                         starts_with("Evidence_"),
+                                         starts_with("Other_Findings"),
+                                         starts_with("Euthanized"),
+                                         contains("Samples"),
+                                         contains("Determined_By"),
+                                         contains("Estimated"),
+                                         contains("Relocated"),
+                                         Carcass_Disposition,
+                                         contains("How"),
+                                         contains("Transfer"),
+                                         contains("Where"),
+                                         contains("Why"),
+                                         Seaworld_Paperwork_Notes)) -> Turtle.Stranding.Details
+  
+  Sp.table %>% select(ID, Genus, Species) -> Sp.table
+  
   write.csv(Turtle.Stranding,
             file = 'data/Turtle_Stranding.csv',
             quote = F, row.names = F)
@@ -71,26 +106,11 @@ if (SWFSC){
                             header = T, sep = ",")
 }
 
-# remove some fields. ts is a checkbox results
-Turtle.Stranding %>% select(-c(ts, starts_with("Observed_By"),
-                                  starts_with("Edit_"))) -> Turtle.Stranding.2
-
-# need to remove some fields - they are paragraphs and not useful
-Turtle.Stranding.Details %>% select(-c(starts_with("Examined_By"),
-                                       ends_with("Description"),
-                                       starts_with("Edit_"),
-                                       starts_with("Necropsied_"),
-                                       ts,
-                                       Location,
-                                       Locality_Details,
-                                       Other_Finding,
-                                       Other_Finding_Description,
-                                       Necropsy_Remarks)) -> Turtle.Stranding.Details.2
 
 # merge together by ID and Stranding_ID, which are shared
 # then merge with Sp ID table (Sp.table)
-all.data <- inner_join(Turtle.Stranding.2,
-                       Turtle.Stranding.Details.2,
+all.data <- inner_join(Turtle.Stranding,
+                       Turtle.Stranding.Details,
                        by = c("ID" = "Stranding_ID")) %>%
   inner_join(Sp.table, by = c("Species_ID" = "ID")) %>%
   inner_join(State.table, by = c("State_ID" = "ID")) %>%
@@ -101,11 +121,13 @@ all.data <- inner_join(Turtle.Stranding.2,
   # rename(., City = Name)
 
 all.data %>% filter(Genus == sp2filter) %>%
-  select(NMFS_ID, Year_Initially_Observed,
+  select(Genus, 
+         NMFS_ID, 
+         Year_Initially_Observed,
          Month_Initially_Observed,
          Day_Initially_Observed,
          Stranded,
-         Released, Died, Latitude, Longitude,
+         Latitude, Longitude,
          State,
          Curved_Carapace_Length, 
          Fishery_Interaction,
@@ -113,10 +135,13 @@ all.data %>% filter(Genus == sp2filter) %>%
          Alive_Released) -> sp.data
 
 
-write.csv(sp.data, file = "data/WC_DC_Strandings_Mar2019.csv",
-          row.names = FALSE, quote = FALSE)
+fishery.interactions <- filter(sp.data, Fishery_Interaction == 1)
+alive.released <- filter(sp.data, Alive_Released == 1)
+CA.stranding <- filter(sp.data, State == "CALIFORNIA")
 
-# write out the results into .rds format. csv failed with unequal numbers of
-# elements written out... not sure what happened there but .rds works.
-# write_rds(all.data,
-#           path = paste0('data/Turtle_Stranding_all_', Sys.Date(), '.rds'))
+
+if (save.file)
+  write.csv(sp.data, 
+            file = paste0("data/", sp2filter, "_Strandings_", Sys.Date(), ".csv"),
+            row.names = FALSE, quote = FALSE)
+
