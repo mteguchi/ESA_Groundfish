@@ -1,9 +1,9 @@
 #plot_strandings
 
 rm(list=ls())
-ifelse(Sys.info()[1] == 'Linux',
-       source('~/Documents/R/tools/TomosFunctions.R'),
-       source('~/R/tools/TomosFunctions.R'))
+# ifelse(Sys.info()[1] == 'Linux',
+#        source('~/Documents/R/tools/TomosFunctions.R'),
+#        source('~/R/tools/TomosFunctions.R'))
 library(tidyverse)
 
 water.color <- "lightblue"
@@ -59,7 +59,7 @@ save.fig <- FALSE
 #                               sp::CRS("+proj=utm +zone=10 ellps=WGS84"))
 
 # file for the stranding data:
-infile <- 'data/Dermochelys_Strandings_2019-03-28.csv'
+infile <- 'data/Dermochelys_Strandings_2019-10-29.csv'
 
 E.end <- -112
 W.end <- -128
@@ -80,8 +80,7 @@ S.end <- 30
 
 # https://www.ngdc.noaa.gov/mgg/shorelines/shorelines.html f is the full resolution - too big
 # h is high resolution - should be good enough. 
-all.coast <- sp::spTransform(rgdal::readOGR(dsn = paste0(dirSelector()$Rdir,
-                                                         "Oceans and Maps/gshhg-shp-2.3.7/GSHHS_shp/h"),
+all.coast <- sp::spTransform(rgdal::readOGR(dsn = paste0("C:/Users/tomo.eguchi/Documents/R/Oceans and Maps/gshhg-shp-2.3.7/GSHHS_shp/h"),
                                             layer = "GSHHS_h_L1",
                                             verbose = FALSE),
                              sp::CRS("+proj=longlat +datum=WGS84"))
@@ -98,8 +97,7 @@ W.coast.df <- broom::tidy(W.coast)
 # the following shape file was obttained from here: #https://gis.stackexchange.com/questions/153514/us-mexican-border-data
 # note that the USGS link is broken but direct link "here" is available. 
 # http://txpub.usgs.gov/BEHI/Data_download/Boundaries_Layers/International_Boundary_shp.zip
-US_MX_border <- sp::spTransform(rgdal::readOGR(dsn = paste0(dirSelector()$Rdir,
-                                                            "Oceans and Maps/International_Boundary/shp"),
+US_MX_border <- sp::spTransform(rgdal::readOGR(dsn = paste0("c:/Users/tomo.eguchi/Documents/R/Oceans and Maps/International_Boundary/shp"),
                                                layer = "International_Boundary_Final",
                                                verbose = FALSE),
                                 sp::CRS("+proj=longlat +datum=WGS84"))
@@ -109,8 +107,7 @@ US_MX_border.df <- broom::tidy(US_MX_border)
 
 # US-Canada border was obtained from here: 
 # https://hifld-geoplatform.opendata.arcgis.com/datasets/canada-and-us-border
-US_Canada_border <- sp::spTransform(rgdal::readOGR(dsn = paste0(dirSelector()$Rdir,
-                                                               "Oceans and Maps/Canada_and_US_Border"),
+US_Canada_border <- sp::spTransform(rgdal::readOGR(dsn = paste0("C:/Users/tomo.eguchi/Documents/R/Oceans and Maps/Canada_and_US_Border"),
                                                   layer = "Canada_and_US_Border",
                                                   verbose = FALSE),
                                    sp::CRS("+proj=longlat +datum=WGS84"))
@@ -119,8 +116,7 @@ US_Canada_border <- raster::crop(US_Canada_border, raster::extent(c(W.end, E.end
 US_Canada_border.df <- broom::tidy(US_Canada_border) 
 
 # state borders from here: https://www.census.gov/geo/maps-data/data/cbf/cbf_state.html
-state_border <- sp::spTransform(rgdal::readOGR(dsn = paste0(dirSelector()$Rdir,
-                                                                "Oceans and Maps/cb_2017_us_state_500k"),
+state_border <- sp::spTransform(rgdal::readOGR(dsn = paste0("C:/Users/tomo.eguchi/Documents/R/Oceans and Maps/cb_2017_us_state_500k"),
                                                    layer = "cb_2017_us_state_500k",
                                                    verbose = FALSE),
                                     sp::CRS("+proj=longlat +datum=WGS84"))
@@ -130,7 +126,7 @@ state_border.df <- broom::tidy(state_border)
 
 # critical habitat polygons can be found here:
 # http://www.nmfs.noaa.gov/pr/species/criticalhabitat.htm
-Dc_CH <- spTransform(readOGR(dsn = "data",
+Dc_CH <- spTransform(readOGR(dsn = "C:/Users/tomo.eguchi/Documents/R/Oceans and Maps/Final_LeatherbackCH",
                              layer = "Final_LeatherbackCH",
                              verbose = F),
                      CRS("+proj=longlat +datum=WGS84"))

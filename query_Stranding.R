@@ -6,7 +6,7 @@ library(readr)
 
 save.file <- T
 
-SWFSC <- F
+SWFSC <- T
 # load a couple databases through ODBC
 # this works only at SWFSC - or VPN also?
 
@@ -67,15 +67,16 @@ if (SWFSC){
   Sp.table %>% select(ID, Genus, Species) -> Sp.table
   
   write.csv(Turtle.Stranding,
-            file = 'data/Turtle_Stranding.csv',
+            file = paste0("data/Turtle_Stranding_", Sys.Date(), ".csv"),
             quote = F, row.names = F)
 
   write.csv(Turtle.Stranding.Details,
-            file = 'data/Turtle_Stranding_Details.csv',
+            file = paste0("data/Turtle_Stranding_Details_", 
+                          Sys.Date(), ".csv"),
             quote = F, row.names = F)
 
   write.csv(Sp.table,
-            file = 'data/Species_Table.csv',
+            file = paste0("data/Species_Table_.csv"),
             quote = F, row.names = F)
 
   write.csv(State.table,
