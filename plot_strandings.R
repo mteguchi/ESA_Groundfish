@@ -59,7 +59,7 @@ save.fig <- FALSE
 #                               sp::CRS("+proj=utm +zone=10 ellps=WGS84"))
 
 # file for the stranding data:
-infile <- 'data/Dermochelys_Strandings_2019-10-29.csv'
+infile <- 'data/Dermochelys_Strandings_2020-10-29.csv'
 
 E.end <- -112
 W.end <- -128
